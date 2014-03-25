@@ -21,3 +21,4 @@ node_modules/
 .yml
 coverage.html
 lib-cov
+src/
