@@ -11,8 +11,8 @@ var mkdirp = require("mkdirp");
 
 var src = "src/";
 
-//var DEFAULT_LOCALE_PATH = 'locale/{locale}/LC_MESSAGES/{name}.js';
-var DEFAULT_LOCALE_PATH = 'locale/{locale}/LC_MESSAGES';
+var DEFAULT_LOCALE_PATH = 'locale/{locale}/LC_MESSAGES/{name}.js';
+var DEFAULT_EXT = ".js";
 
 // commander gettext
 commander
@@ -35,32 +35,48 @@ commander.parse(process.argv);
 
 var src_file = "./src/" + pkg.name + ".js";
 
+console.log();
+
 if(fs.existsSync(src_file)){
 
   fs.readFile(src_file, {encoding:"utf-8"}, function(err, data){
 
     var locale = xgettext(data);
-    var path = commander["locale-path"] ||
+    var locale_path = commander["locale-path"] ||
                spmrc.get('xgettext.locale_path') ||
                DEFAULT_LOCALE_PATH;
     var locale_names = commander.args || locale.names || [];
 
-    for(var i=0,l=locale_names.length; i<l; i++){
-      mkdirp(src + path.replace(/\{locale(?:\:[^\}]*)?\}/g, locale_names[i]), function(err){
-        if(!err){
+    locale_names.forEach(function(locale_name, index){
+      var loc_path = src +
+        locale_path.replace(/\{locale(?:\:[^\}]*)?\}/g, locale_name)
+        .replace(/\{name\}/, pkg.name);
+      var loc_dir = path.dirname(loc_path);
+      var loc_filename = path.basename(loc_path, DEFAULT_EXT);
+      var loc_ext = path.extname(loc_path) || DEFAULT_EXT;
 
-          // TODO: write locale content.
+      loc_path = loc_dir + "/" + loc_filename + loc_ext;
 
-        }else{
-          console.error(err);
+      if(!fs.existsSync(loc_dir)){
+        if(!mkdirp.sync(loc_dir)){
+          console.error("mkdir -p " + loc_dir + " failed.");
+          process.exit();
         }
-      });
-    }
+      }
+      if(!fs.writeFileSync(loc_path, locale.content)){
+        console.log("  * [" + locale_name + "]: " + loc_path);
+      }else{
+        console.error("  * [" + locale_name + "]: failed.");
+      }
+    });
 
+    console.log();
   });
 
 }else{
   console.error("Not found file " + src_file);
+  console.log();
 }
+
 
 // vim:ft=javascript
