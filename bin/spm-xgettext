@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+
+var path = require('path');
+var commander = require('commander');
+var color = require('colorful').color;
+var fs = require('fs');
+var xgettext = require('..');
+var pkg = require('../package.json');
+var spmrc = require("spmrc");
+
+var DEFAULT_LOCALE_PATH = './src/locale/{locale}/LC_MESSAGES/{name}.js';
+
+// commander gettext
+commander
+  .version(pkg.version)
+  .usage('[locale]')
+  .option('-v, --verbose', 'Show more infomation.')
+  .option('-f, --force', 'Force to process the task.');
+
+commander.on('--help', function() {
+  console.log();
+  console.log('  Change locale directory in ~/.spm/spmrc');
+  console.log();
+  console.log(color.magenta('    [gettext]'));
+  console.log('    path = ./locale/{locale}/LC_MESSAGES.js');
+  console.log();
+});
+commander.parse(process.argv);
+
+
+
+var src = "./src/" + pkg.name + ".js";
+
+if(fs.existsSync(src)){
+
+  fs.readFile(src, function(err, data){
+
+    xgettext(data, spmrc.get('xgettext.locale_path') || DEFAULT_LOCALE_PATH);
+
+  });
+
+}else{
+  console.error("Not found file " + src);
+}
