@@ -7,8 +7,12 @@ var fs = require('fs');
 var xgettext = require('..');
 var pkg = require('../package.json');
 var spmrc = require("spmrc");
+var mkdirp = require("mkdirp");
 
-var DEFAULT_LOCALE_PATH = './src/locale/{locale}/LC_MESSAGES/{name}.js';
+var src = "src/";
+
+//var DEFAULT_LOCALE_PATH = 'locale/{locale}/LC_MESSAGES/{name}.js';
+var DEFAULT_LOCALE_PATH = 'locale/{locale}/LC_MESSAGES';
 
 // commander gettext
 commander
@@ -29,16 +33,34 @@ commander.parse(process.argv);
 
 
 
-var src = "./src/" + pkg.name + ".js";
+var src_file = "./src/" + pkg.name + ".js";
 
-if(fs.existsSync(src)){
+if(fs.existsSync(src_file)){
 
-  fs.readFile(src, function(err, data){
+  fs.readFile(src_file, {encoding:"utf-8"}, function(err, data){
 
-    xgettext(data, spmrc.get('xgettext.locale_path') || DEFAULT_LOCALE_PATH);
+    var locale = xgettext(data);
+    var path = commander["locale-path"] ||
+               spmrc.get('xgettext.locale_path') ||
+               DEFAULT_LOCALE_PATH;
+    var locale_names = commander.args || locale.names || [];
+
+    for(var i=0,l=locale_names.length; i<l; i++){
+      mkdirp(src + path.replace(/\{locale(?:\:[^\}]*)?\}/g, locale_names[i]), function(err){
+        if(!err){
+
+          // TODO: write locale content.
+
+        }else{
+          console.error(err);
+        }
+      });
+    }
 
   });
 
 }else{
-  console.error("Not found file " + src);
+  console.error("Not found file " + src_file);
 }
+
+// vim:ft=javascript
