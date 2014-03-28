@@ -5,7 +5,13 @@ var commander = require('commander');
 var color = require('colorful').color;
 var fs = require('fs');
 var xgettext = require('..');
-var pkg = require('../package.json');
+
+var pkg_file = process.cwd() + '/package.json';
+if(!fs.existsSync(pkg_file)){
+  console.error("Not found package.json");
+  return;
+}
+var pkg = require(process.cwd()+'/package.json');
 var spmrc = require("spmrc");
 var mkdirp = require("mkdirp");
 
